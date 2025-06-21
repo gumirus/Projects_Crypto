@@ -91,3 +91,24 @@ header h1 {
   margin-bottom: 0.5rem;
   color: #adbac7;
 }
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tabs button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: #21262d;
+  color: #c9d1d9;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.tabs button.active {
+  background: #58a6ff;
+  color: #ffffff;
+}

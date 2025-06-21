@@ -41,8 +41,17 @@
       </section>
 
       <section class="chart">
-        <h2>Price Chart</h2>
+        <div class="tabs">
+          <button id="btn-btc" class="active">BTC</button>
+          <button id="btn-eth">ETH</button>
+        </div>
         <canvas id="btc-chart" width="100%" height="300"></canvas>
+        <canvas
+          id="eth-chart"
+          width="100%"
+          height="300"
+          style="display: none"
+        ></canvas>
       </section>
 
       <section class="news">
