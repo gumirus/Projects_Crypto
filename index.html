@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crypto Dashboard</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>DASHBOARD FOR CRYPTO TRADERS</h1>
+        <p>Concept for decentralized development</p>
+      </header>
+
+      <section class="market">
+        <div class="coin">
+          <img
+            src="https://assets.coingecko.com/coins/images/1/small/bitcoin.png"
+            alt="BTC"
+          />
+          <div class="info">
+            <h2>BTC</h2>
+            <p id="btc-price">$--</p>
+            <span id="btc-change">--%</span>
+          </div>
+        </div>
+        <div class="coin">
+          <img
+            src="https://assets.coingecko.com/coins/images/279/small/ethereum.png"
+            alt="ETH"
+          />
+
+          <div class="info">
+            <h2>ETH</h2>
+            <p id="eth-price">$--</p>
+            <span id="eth-change">--%</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="chart">
+        <h2>Price Chart</h2>
+        <canvas id="btc-chart" width="100%" height="300"></canvas>
+      </section>
+
+      <section class="news">
+        <h2>News</h2>
+        <ul>
+          <li>Bifcoin Reaches New All Time High</li>
+          <li>Binereium Network Upgrade Announced</li>
+          <li>Crypto Market Shows Continued Growth</li>
+        </ul>
+      </section>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
