@@ -1,12 +1,53 @@
-// --- Binance API для графика ---
-async function fetchBinanceKlines(symbol = 'BTCUSDT', interval = '5m', limit = 288) {
-  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
-  const response = await fetch(url)
-  if (!response.ok) throw new Error('Ошибка загрузки данных с Binance')
-  return await response.json()
+// --- Таймфреймы для графика ---
+const TIMEFRAMES = [
+  { label: '5m', value: '5m' },
+  { label: '10m', value: '10m' },
+  { label: '15m', value: '15m' },
+  { label: '30m', value: '30m' },
+  { label: '1h', value: '1h' },
+  { label: '2h', value: '2h' },
+  { label: '4h', value: '4h' },
+  { label: '1d', value: '1d' },
+  { label: '1w', value: '1w' },
+]
+
+// --- LocalStorage helpers ---
+function saveDashboardState() {
+  localStorage.setItem('mainCoin', mainCoin)
+  localStorage.setItem('mainChartType', mainChartType)
+  localStorage.setItem('mainTimeframe', mainTimeframe)
+}
+function loadDashboardState() {
+  const coin = localStorage.getItem('mainCoin')
+  const type = localStorage.getItem('mainChartType')
+  const tf = localStorage.getItem('mainTimeframe')
+  if (coin) mainCoin = coin
+  if (type) mainChartType = type
+  if (tf) mainTimeframe = tf
 }
 
-// --- Единый график с переключателями монеты и типа ---
+let mainTimeframe = '5m'
+
+function createMainTimeframeSwitch() {
+  const switchDiv = document.getElementById('main-timeframe-switch')
+  if (!switchDiv) return
+  switchDiv.innerHTML = ''
+  TIMEFRAMES.forEach(tf => {
+    const btn = document.createElement('button')
+    btn.textContent = tf.label
+    btn.className = mainTimeframe === tf.value ? 'active' : ''
+    btn.onclick = () => {
+      mainTimeframe = tf.value
+      saveDashboardState()
+      createMainTimeframeSwitch()
+      createMainChart()
+      fetchMainChartData()
+    }
+    switchDiv.appendChild(btn)
+  })
+}
+
+// --- Единый график с переключателями монеты, типа и таймфрейма ---
 let mainChart = null
 let mainSeries = null
 let mainChartType = 'line'
@@ -27,17 +68,21 @@ function createMainCoinSwitch() {
   switchDiv.appendChild(ethBtn)
   btcBtn.onclick = () => {
     mainCoin = 'BTCUSDT'
+    saveDashboardState()
+    createMainCoinSwitch()
     createMainChart()
     fetchMainChartData()
-    createMainCoinSwitch()
     createMainTypeSwitch()
+    createMainTimeframeSwitch()
   }
   ethBtn.onclick = () => {
     mainCoin = 'ETHUSDT'
+    saveDashboardState()
+    createMainCoinSwitch()
     createMainChart()
     fetchMainChartData()
-    createMainCoinSwitch()
     createMainTypeSwitch()
+    createMainTimeframeSwitch()
   }
 }
 
@@ -59,21 +104,24 @@ function createMainTypeSwitch() {
   switchDiv.appendChild(barBtn)
   lineBtn.onclick = () => {
     mainChartType = 'line'
+    saveDashboardState()
+    createMainTypeSwitch()
     createMainChart()
     fetchMainChartData()
-    createMainTypeSwitch()
   }
   candleBtn.onclick = () => {
     mainChartType = 'candles'
+    saveDashboardState()
+    createMainTypeSwitch()
     createMainChart()
     fetchMainChartData()
-    createMainTypeSwitch()
   }
   barBtn.onclick = () => {
     mainChartType = 'bars'
+    saveDashboardState()
+    createMainTypeSwitch()
     createMainChart()
     fetchMainChartData()
-    createMainTypeSwitch()
   }
 }
 
@@ -128,16 +176,42 @@ function createMainChart() {
       lineWidth: 2,
     })
   }
+  // --- Базовая заготовка для рисования ---
+  mainChart.subscribeClick(param => handleMainChartDraw(param))
+}
+
+// --- Модифицированная функция загрузки данных с таймфреймом ---
+function binanceIntervalToLimit(interval) {
+  switch (interval) {
+    case '1w': return 104; // 2 года (52 недели * 2)
+    case '1d': return 365; // 1 год
+    case '4h': return 504; // ~3 месяца
+    case '2h': return 504; // ~6 недель
+    case '1h': return 720; // 30 дней
+    case '30m': return 720; // 15 дней
+    case '15m': return 480; // 5 дней
+    case '10m': return 432; // 3 дня (432*10m=3d)
+    case '5m': return 288; // 1 день
+    default: return 288;
+  }
+}
+
+async function fetchBinanceKlines(symbol = 'BTCUSDT', interval = '5m', limit = 288) {
+  // Binance API intervals: 5m, 10m, 15m, 30m, 1h, 2h, 4h, 1d, 1w
+  const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&limit=${limit}`
+  const response = await fetch(url)
+  if (!response.ok) throw new Error('Ошибка загрузки данных с Binance')
+  return await response.json()
 }
 
 async function fetchMainChartData() {
   try {
-    const cacheKey = mainCoin + '_' + mainChartType
+    const cacheKey = mainCoin + '_' + mainChartType + '_' + mainTimeframe
     if (mainChartCache[cacheKey]) {
       mainSeries.setData(mainChartCache[cacheKey])
       return
     }
-    const klines = await fetchBinanceKlines(mainCoin)
+    const klines = await fetchBinanceKlines(mainCoin, mainTimeframe, binanceIntervalToLimit(mainTimeframe))
     let chartData
     if (mainChartType === 'candles' || mainChartType === 'bars') {
       chartData = klines.map(k => ({
@@ -161,6 +235,27 @@ async function fetchMainChartData() {
       container.innerHTML = '<div style="color:#e74c3c;text-align:center;padding-top:150px;font-size:1.2rem;">Ошибка загрузки данных с Binance</div>'
     }
     console.error('Error fetching Binance chart:', err)
+  }
+}
+
+// --- Получение и отображение цен BTC и ETH с Binance ---
+async function fetchAndShowPrices() {
+  try {
+    // BTC
+    const btcResp = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
+    const btc = await btcResp.json();
+    document.getElementById('btc-price').textContent = '$' + parseFloat(btc.lastPrice).toLocaleString();
+    document.getElementById('btc-change').textContent = (parseFloat(btc.priceChangePercent).toFixed(2) + '%');
+    document.getElementById('btc-change').style.color = parseFloat(btc.priceChangePercent) >= 0 ? '#2ecc71' : '#e74c3c';
+    // ETH
+    const ethResp = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT');
+    const eth = await ethResp.json();
+    document.getElementById('eth-price').textContent = '$' + parseFloat(eth.lastPrice).toLocaleString();
+    document.getElementById('eth-change').textContent = (parseFloat(eth.priceChangePercent).toFixed(2) + '%');
+    document.getElementById('eth-change').style.color = parseFloat(eth.priceChangePercent) >= 0 ? '#2ecc71' : '#e74c3c';
+  } catch (err) {
+    document.getElementById('btc-price').textContent = 'Error';
+    document.getElementById('eth-price').textContent = 'Error';
   }
 }
 
@@ -189,30 +284,11 @@ async function fetchCryptoNews() {
   }
 }
 
-// --- Получение и отображение цен BTC и ETH с Binance ---
-async function fetchAndShowPrices() {
-  try {
-    // BTC
-    const btcResp = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT');
-    const btc = await btcResp.json();
-    document.getElementById('btc-price').textContent = '$' + parseFloat(btc.lastPrice).toLocaleString();
-    document.getElementById('btc-change').textContent = (parseFloat(btc.priceChangePercent).toFixed(2) + '%');
-    document.getElementById('btc-change').style.color = parseFloat(btc.priceChangePercent) >= 0 ? '#2ecc71' : '#e74c3c';
-    // ETH
-    const ethResp = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=ETHUSDT');
-    const eth = await ethResp.json();
-    document.getElementById('eth-price').textContent = '$' + parseFloat(eth.lastPrice).toLocaleString();
-    document.getElementById('eth-change').textContent = (parseFloat(eth.priceChangePercent).toFixed(2) + '%');
-    document.getElementById('eth-change').style.color = parseFloat(eth.priceChangePercent) >= 0 ? '#2ecc71' : '#e74c3c';
-  } catch (err) {
-    document.getElementById('btc-price').textContent = 'Error';
-    document.getElementById('eth-price').textContent = 'Error';
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
+  loadDashboardState()
   createMainCoinSwitch()
   createMainTypeSwitch()
+  createMainTimeframeSwitch()
   createMainChart()
   fetchMainChartData()
   fetchCryptoNews()

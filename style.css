@@ -120,7 +120,14 @@ header h1 {
   justify-content: flex-start;
 }
 
-.type-switch button {
+.draw-tools {
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.draw-tools button {
   padding: 0.3rem 0.8rem;
   border: none;
   background: #21262d;
@@ -131,7 +138,7 @@ header h1 {
   font-size: 1rem;
 }
 
-.type-switch button.active {
+.draw-tools button.active {
   background: #58a6ff;
   color: #fff;
 }
@@ -145,4 +152,11 @@ header h1 {
   margin: 0 auto 1rem auto;
   overflow: hidden;
   position: relative;
+}
+
+.type-switch button.active {
+  background: #3166a7; /* darker blue for active */
+  color: #fff;
+  box-shadow: 0 2px 8px 0 #222b3a99, 0 0 0 2px #58a6ff55;
+  /* visually pressed and highlighted */
 }
