@@ -112,3 +112,37 @@ header h1 {
   background: #58a6ff;
   color: #ffffff;
 }
+
+.type-switch {
+  margin-bottom: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+.type-switch button {
+  padding: 0.3rem 0.8rem;
+  border: none;
+  background: #21262d;
+  color: #c9d1d9;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-size: 1rem;
+}
+
+.type-switch button.active {
+  background: #58a6ff;
+  color: #fff;
+}
+
+.lightchart-container {
+  width: 900px;
+  height: 400px;
+  background: #161b22;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  margin: 0 auto 1rem auto;
+  overflow: hidden;
+  position: relative;
+}
