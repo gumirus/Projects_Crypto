@@ -1,7 +1,7 @@
 // --- Таймфреймы для графика ---
 const TIMEFRAMES = [
   { label: '5m', value: '5m' },
-  { label: '10m', value: '10m' },
+  // { label: '10m', value: '10m' },
   { label: '15m', value: '15m' },
   { label: '30m', value: '30m' },
   { label: '1h', value: '1h' },
@@ -190,7 +190,7 @@ function binanceIntervalToLimit(interval) {
     case '1h': return 720; // 30 дней
     case '30m': return 720; // 15 дней
     case '15m': return 480; // 5 дней
-    case '10m': return 432; // 3 дня (432*10m=3d)
+    //case '10m': return 432; // 3 дня (432*10m=3d)
     case '5m': return 288; // 1 день
     default: return 288;
   }
